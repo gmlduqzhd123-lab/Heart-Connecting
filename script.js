@@ -8,6 +8,9 @@ let roleSwapped = false;
 let searchQuery = '';
 let currentStep = 1;
 let stepInputs = {1: '', 2: '', 3: ''};
+let memoryMode = false;
+let lessonTimer = null;
+let lessonRemaining = 0;
 
 const encourageMessages = [
   "잘했어! 친구 마음을 생각해보는 게 정말 어려웠을 텐데 용감했어.",
@@ -45,6 +48,22 @@ const stepPrompts = {
   }
 };
 
+const lessonPresets = {
+  5: '5분: 상황 1개 선택 → 1단계 마음 말하기 → 느낌 나누기',
+  10: '10분: 상황 1개 → 3단계 연습 → 역할 바꾸기 → 성찰',
+  40: '40분: 추천 상황 2~3개 → 모둠 연습 → 전체 나눔 → 성찰 정리'
+};
+
+function getStorage(key, fallback) {
+  if (memoryMode) return fallback;
+  try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); } catch { return fallback; }
+}
+
+function setStorage(key, value) {
+  if (memoryMode) return;
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+}
+
 async function loadScenarios() {
   const listEl = document.getElementById('scenario-list');
   try {
@@ -59,6 +78,7 @@ async function loadScenarios() {
     renderTodayRecommend();
     renderScenarioList('all');
     updateModeUI();
+    renderLessonPresets();
   } catch (e) {
     listEl.innerHTML = '<p style="text-align:center; color:#c00;">상황 자료를 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.</p><button onclick="location.reload()" class="load-more-btn">다시 시도</button>';
     document.getElementById('stats').textContent = '자료를 불러오지 못했습니다.';
@@ -66,20 +86,16 @@ async function loadScenarios() {
   }
 }
 
-function getPracticedIds() {
-  try { return JSON.parse(localStorage.getItem('practiced') || '[]'); } catch { return []; }
-}
-
 function markOpened(id) {
-  const opened = JSON.parse(localStorage.getItem('opened') || '[]');
+  const opened = getStorage('opened', []);
   if (!opened.includes(id)) {
     opened.push(id);
-    localStorage.setItem('opened', JSON.stringify(opened));
+    setStorage('opened', opened);
   }
 }
 
 function getFavorites() {
-  try { return JSON.parse(localStorage.getItem('favorites') || '[]'); } catch { return []; }
+  return getStorage('favorites', []);
 }
 
 function toggleFavorite(id) {
@@ -89,7 +105,7 @@ function toggleFavorite(id) {
   } else {
     favs.push(id);
   }
-  localStorage.setItem('favorites', JSON.stringify(favs));
+  setStorage('favorites', favs);
   updateFavButton();
   renderDashboard();
 }
@@ -103,10 +119,10 @@ function updateFavButton() {
 }
 
 function renderDashboard() {
-  const opened = JSON.parse(localStorage.getItem('opened') || '[]');
-  const reflections = Object.keys(localStorage).filter(k => k.startsWith('reflection_')).length;
+  const opened = getStorage('opened', []);
+  const reflections = memoryMode ? 0 : Object.keys(localStorage).filter(k => k.startsWith('reflection_')).length;
   const favs = getFavorites().length;
-  document.getElementById('stats').textContent = `본 상황 ${opened.length}개 · 성찰 ${reflections}개 · 즐겨찾기 ${favs}개`;
+  document.getElementById('stats').textContent = `본 상황 ${opened.length}개 · 성찰 ${reflections}개 · 즐겨찾기 ${favs}개${memoryMode ? ' (메모리 모드)' : ''}`;
 }
 
 function renderTodayRecommend() {
@@ -206,6 +222,10 @@ function renderReflections() {
   showingReflections = true;
   const container = document.getElementById('scenario-list');
   document.getElementById('list-title').textContent = '내가 작성한 성찰';
+  if (memoryMode) {
+    container.innerHTML = '<p style="text-align:center; color:#888;">메모리 모드에서는 성찰이 저장되지 않습니다.</p>';
+    return;
+  }
   const items = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
@@ -275,8 +295,8 @@ function showScenario(id) {
   document.getElementById('questions-list').innerHTML =
     (currentScenario.questions || []).map(q => `<li>${q}</li>`).join('');
 
-  const saved = localStorage.getItem(`reflection_${id}`);
-  document.getElementById('reflection').value = saved || '';
+  const saved = memoryMode ? '' : (localStorage.getItem(`reflection_${id}`) || '');
+  document.getElementById('reflection').value = saved;
   document.getElementById('save-message').classList.add('hidden');
   document.getElementById('encourage').classList.add('hidden');
 
@@ -314,6 +334,40 @@ function updateModeUI() {
   const isTeacher = document.getElementById('teacher-mode')?.checked;
   document.body.classList.toggle('teacher-mode', isTeacher);
   updateTeacherTip();
+  const presetCard = document.getElementById('lesson-preset-card');
+  if (presetCard) presetCard.style.display = isTeacher ? 'block' : 'none';
+}
+
+function renderLessonPresets() {
+  const container = document.getElementById('lesson-presets');
+  if (!container) return;
+  container.innerHTML = Object.entries(lessonPresets).map(([min, desc]) =>
+    `<button class="lesson-btn" data-min="${min}">${min}분 수업</button>`
+  ).join('') + `<p id="lesson-desc" class="lesson-desc"></p><p id="lesson-timer" class="lesson-timer"></p>`;
+  container.querySelectorAll('.lesson-btn').forEach(btn => {
+    btn.onclick = () => startLesson(parseInt(btn.dataset.min));
+  });
+}
+
+function startLesson(minutes) {
+  if (lessonTimer) clearInterval(lessonTimer);
+  lessonRemaining = minutes * 60;
+  document.getElementById('lesson-desc').textContent = lessonPresets[minutes];
+  updateTimerDisplay();
+  lessonTimer = setInterval(() => {
+    lessonRemaining--;
+    updateTimerDisplay();
+    if (lessonRemaining <= 0) {
+      clearInterval(lessonTimer);
+      document.getElementById('lesson-timer').textContent = '수업 시간 종료!';
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(lessonRemaining / 60);
+  const s = lessonRemaining % 60;
+  document.getElementById('lesson-timer').textContent = `남은 시간: ${m}:${s.toString().padStart(2, '0')}`;
 }
 
 function setupFilters() {
@@ -352,6 +406,10 @@ document.getElementById('swap-role-btn')?.addEventListener('click', () => {
 
 document.getElementById('save-reflection')?.addEventListener('click', () => {
   if (!currentScenario) return;
+  if (memoryMode) {
+    alert('메모리 모드에서는 성찰이 저장되지 않습니다. 저장하려면 메모리 모드를 끄세요.');
+    return;
+  }
   const text = document.getElementById('reflection').value.trim();
   if (text) {
     localStorage.setItem(`reflection_${currentScenario.id}`, text);
@@ -403,6 +461,12 @@ document.getElementById('close-modal')?.addEventListener('click', () => {
 });
 
 document.getElementById('teacher-mode')?.addEventListener('change', updateModeUI);
+
+document.getElementById('memory-mode')?.addEventListener('change', (e) => {
+  memoryMode = e.target.checked;
+  renderDashboard();
+  if (showingReflections) renderReflections();
+});
 
 document.getElementById('search-input')?.addEventListener('input', (e) => {
   searchQuery = e.target.value.trim();
