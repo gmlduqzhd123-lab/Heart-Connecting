@@ -3,23 +3,26 @@ let currentScenario = null;
 let currentFilter = 'all';
 let showingFavorites = false;
 let showingReflections = false;
-let displayLimit = 15;
+let displayLimit = 12;
+let roleSwapped = false;
+let searchQuery = '';
 
 const encourageMessages = [
   "잘했어! 친구 마음을 생각해보는 게 정말 어려웠을 텐데 용감했어.",
   "멋진 성찰이야. 이렇게 마음을 돌아보는 습관이 중요해.",
   "오늘도 한 걸음 더 나아갔어. 정말 잘하고 있어!",
   "서로의 마음을 이해하려고 노력하는 모습이 보기 좋아.",
-  "연습한 만큼 진짜 상황에서도 더 잘 말할 수 있을 거야."
+  "연습한 만큼 진짜 상황에서도 더 잘 말할 수 있을 거야.",
+  "역할까지 바꿔서 생각해보다니 정말 대단해!"
 ];
 
 const teacherTips = {
-  "친구 관계": "쉬는 시간이나 점심시간에 간단히 함께 연습해 보세요. 학생이 직접 역할을 바꿔 해보게 하면 더 좋습니다.",
-  "모둠 활동": "모둠 활동 시작 전에 2분 정도 관련 상황을 다뤄보면 갈등을 예방할 수 있습니다. 모둠별로 하나씩 골라 연습해 보세요.",
-  "수업 중": "수업 중 생긴 갈등을 바로 다루기보다 쉬는 시간에 성찰로 연결해 보세요. 교사용 모드에서 팁을 참고하세요.",
-  "놀이터": "체육 시간이나 쉬는 시간 후 간단한 대화 자료로 활용하기 좋습니다. 실제 상황을 떠올리며 연습하면 효과적입니다.",
-  "급식시간": "급식 후 짧은 성찰 활동으로 연결하면 효과가 있습니다. 자리 배치나 순서 관련 상황을 다뤄보세요.",
-  "쉬는 시간": "갈등 상황 직후 바로 연습하기 좋은 주제입니다. 학생이 스스로 고르게 한 뒤 함께 이야기해 보세요."
+  "친구 관계": "쉬는 시간이나 점심시간에 간단히 함께 연습해 보세요. 학생이 직접 역할을 바꿔 해보게 하면 공감 효과가 커집니다. 모둠별로 한 가지씩 골라 2분 연습 후 느낌 나누기도 좋습니다.",
+  "모둠 활동": "모둠 활동 시작 전에 2분 정도 관련 상황을 다뤄보면 갈등을 예방할 수 있습니다. 역할 바꾸기 기능으로 상대 입장을 직접 경험하게 해보세요.",
+  "수업 중": "수업 중 생긴 갈등을 바로 다루기보다 쉬는 시간에 성찰로 연결해 보세요. 교사용 팁과 함께 학생이 쓴 성찰을 바탕으로 짧게 대화하면 효과적입니다.",
+  "놀이터": "체육 시간이나 쉬는 시간 후 간단한 대화 자료로 활용하기 좋습니다. 실제 상황을 떠올리며 연습하고, 역할을 바꿔 해보게 하세요.",
+  "급식시간": "급식 후 짧은 성찰 활동으로 연결하면 효과가 있습니다. 자리 배치나 순서 관련 상황을 다뤄보고, 학생이 저장한 상황을 중심으로 지도하세요.",
+  "쉬는 시간": "갈등 상황 직후 바로 연습하기 좋은 주제입니다. 학생이 스스로 고르게 한 뒤 함께 이야기하고, 성찰 내용을 공유해 보세요."
 };
 
 async function loadScenarios() {
@@ -74,7 +77,19 @@ function updateFavButton() {
 function renderDashboard() {
   const practiced = getPracticedIds();
   const reflections = Object.keys(localStorage).filter(k => k.startsWith('reflection_')).length;
-  document.getElementById('stats').textContent = `연습한 상황 ${practiced.length}개 · 성찰 작성 ${reflections}개`;
+  const favs = getFavorites().length;
+  document.getElementById('stats').textContent = `연습 ${practiced.length}개 · 성찰 ${reflections}개 · 즐겨찾기 ${favs}개`;
+
+  const ach = document.getElementById('achievement');
+  if (practiced.length >= 10) {
+    ach.textContent = '🎉 10개 이상 연습했어요! 꾸준함이 대단해요.';
+    ach.classList.remove('hidden');
+  } else if (practiced.length >= 5) {
+    ach.textContent = '👍 5개 이상 연습 중! 잘하고 있어요.';
+    ach.classList.remove('hidden');
+  } else {
+    ach.classList.add('hidden');
+  }
 }
 
 function renderTodayRecommend() {
@@ -82,31 +97,45 @@ function renderTodayRecommend() {
   const day = new Date().getDate();
   const scenario = scenarios[day % scenarios.length];
   document.getElementById('today-card').innerHTML = `
-    <div class="scenario-card compact" data-id="${scenario.id}" style="margin:0;">
-      <span class="category">${scenario.category}</span>
-      <h3>${scenario.title}</h3>
+    <div class="scenario-item" data-id="${scenario.id}" style="margin:0;">
+      <div class="top-row">
+        <span class="cat-badge">${scenario.category}</span>
+        <span class="item-title">${scenario.title}</span>
+      </div>
+      <div class="item-preview">${scenario.situation.substring(0, 60)}...</div>
     </div>
   `;
-  const card = document.querySelector('#today-card .scenario-card');
+  const card = document.querySelector('#today-card .scenario-item');
   if (card) card.addEventListener('click', () => showScenario(scenario.id));
+}
+
+function filterBySearch(items) {
+  if (!searchQuery) return items;
+  const q = searchQuery.toLowerCase();
+  return items.filter(s => 
+    s.title.toLowerCase().includes(q) || 
+    s.situation.toLowerCase().includes(q) ||
+    s.category.toLowerCase().includes(q)
+  );
 }
 
 function renderListItems(items, container) {
   const limited = items.slice(0, displayLimit);
   container.innerHTML = limited.map(s => `
     <div class="scenario-item" data-id="${s.id}">
-      <span class="cat-badge">${s.category}</span>
-      <span class="item-title">${s.title}</span>
+      <div class="top-row">
+        <span class="cat-badge">${s.category}</span>
+        <span class="item-title">${s.title}</span>
+      </div>
+      <div class="item-preview">${s.situation.substring(0, 70)}${s.situation.length > 70 ? '...' : ''}</div>
     </div>
   `).join('');
 
   if (items.length > displayLimit) {
     container.innerHTML += `<button id="load-more" class="load-more-btn">더 보기 (${items.length - displayLimit}개 더)</button>`;
     document.getElementById('load-more').addEventListener('click', () => {
-      displayLimit += 15;
-      if (showingFavorites) renderFavorites();
-      else if (showingReflections) renderReflections();
-      else renderScenarioList(currentFilter);
+      displayLimit += 12;
+      refreshCurrentList();
     });
   }
 
@@ -115,30 +144,38 @@ function renderListItems(items, container) {
   });
 }
 
+function refreshCurrentList() {
+  if (showingFavorites) renderFavorites();
+  else if (showingReflections) renderReflections();
+  else renderScenarioList(currentFilter);
+}
+
 function renderScenarioList(category) {
   currentFilter = category;
   showingFavorites = false;
   showingReflections = false;
-  displayLimit = 15;
+  displayLimit = 12;
   const container = document.getElementById('scenario-list');
   let filtered = category === 'all' ? scenarios : scenarios.filter(s => s.category === category);
+  filtered = filterBySearch(filtered);
 
   if (filtered.length === 0) {
-    container.innerHTML = '<p style="text-align:center; color:#888;">해당 카테고리의 시나리오가 없습니다. 😊</p>';
+    container.innerHTML = '<p style="text-align:center; color:#888;">해당 조건의 시나리오가 없습니다. 😊</p>';
     return;
   }
 
   renderListItems(filtered, container);
   updateProgress(category);
-  document.getElementById('list-title').textContent = '상황 선택하기';
+  document.getElementById('list-title').textContent = searchQuery ? `"${searchQuery}" 검색 결과` : '상황 선택하기';
 }
 
 function renderFavorites() {
   showingFavorites = true;
   showingReflections = false;
-  displayLimit = 15;
+  displayLimit = 12;
   const favs = getFavorites();
-  const filtered = scenarios.filter(s => favs.includes(s.id));
+  let filtered = scenarios.filter(s => favs.includes(s.id));
+  filtered = filterBySearch(filtered);
   const container = document.getElementById('scenario-list');
 
   document.getElementById('list-title').textContent = '내가 저장한 상황';
@@ -154,7 +191,7 @@ function renderFavorites() {
 function renderReflections() {
   showingFavorites = false;
   showingReflections = true;
-  displayLimit = 15;
+  displayLimit = 12;
   const container = document.getElementById('scenario-list');
   document.getElementById('list-title').textContent = '내가 작성한 성찰';
 
@@ -165,23 +202,22 @@ function renderReflections() {
       const id = key.replace('reflection_', '');
       const text = localStorage.getItem(key);
       const scenario = scenarios.find(s => s.id === id);
-      if (scenario && text) {
-        items.push(scenario);
-      }
+      if (scenario && text) items.push(scenario);
     }
   }
+  const filtered = filterBySearch(items);
 
-  if (items.length === 0) {
+  if (filtered.length === 0) {
     container.innerHTML = '<p style="text-align:center; color:#888;">아직 작성한 성찰이 없어요. 상황을 연습하고 성찰을 저장해 보세요!</p>';
     return;
   }
 
-  renderListItems(items, container);
+  renderListItems(filtered, container);
 }
 
 function updateProgress(category) {
   const el = document.getElementById('progress-info');
-  if (category === 'all' || showingFavorites || showingReflections) {
+  if (category === 'all' || showingFavorites || showingReflections || searchQuery) {
     el.textContent = '';
     return;
   }
@@ -196,6 +232,7 @@ function updateProgress(category) {
 function showScenario(id) {
   currentScenario = scenarios.find(s => s.id === id);
   if (!currentScenario) return;
+  roleSwapped = false;
 
   markPracticed(id);
   renderDashboard();
@@ -207,13 +244,7 @@ function showScenario(id) {
   document.getElementById('scenario-title').textContent = currentScenario.title;
   document.getElementById('scenario-situation').textContent = currentScenario.situation;
 
-  const scriptsEl = document.getElementById('scripts');
-  scriptsEl.innerHTML = currentScenario.scripts.map(script => `
-    <div class="script-block">
-      <strong>${script.role}:</strong>
-      ${script.lines.map(line => `<p>${line}</p>`).join('')}
-    </div>
-  `).join('');
+  renderScripts();
 
   document.getElementById('empathy-list').innerHTML = 
     currentScenario.empathy_examples.map(ex => `<li>${ex}</li>`).join('');
@@ -228,6 +259,22 @@ function showScenario(id) {
 
   updateFavButton();
   updateTeacherTip();
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.querySelector('.step[data-step="1"]').classList.add('active');
+}
+
+function renderScripts() {
+  const scriptsEl = document.getElementById('scripts');
+  let scripts = currentScenario.scripts;
+  if (roleSwapped && scripts.length >= 2) {
+    scripts = [scripts[1], scripts[0]];
+  }
+  scriptsEl.innerHTML = scripts.map(script => `
+    <div class="script-block">
+      <strong>${script.role}:</strong>
+      ${script.lines.map(line => `<p>${line}</p>`).join('')}
+    </div>
+  `).join('');
 }
 
 function updateTeacherTip() {
@@ -244,10 +291,6 @@ function updateTeacherTip() {
 function updateModeUI() {
   const isTeacher = document.getElementById('teacher-mode').checked;
   document.body.classList.toggle('teacher-mode', isTeacher);
-  const modeLabel = document.querySelector('.mode-toggle label');
-  if (modeLabel) {
-    modeLabel.style.fontWeight = isTeacher ? 'bold' : 'normal';
-  }
   updateTeacherTip();
 }
 
@@ -256,7 +299,9 @@ function setupFilters() {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      displayLimit = 15;
+      displayLimit = 12;
+      searchQuery = '';
+      document.getElementById('search-input').value = '';
       renderScenarioList(btn.dataset.category);
     });
   });
@@ -266,14 +311,20 @@ document.getElementById('back-btn').addEventListener('click', () => {
   document.getElementById('practice').classList.add('hidden');
   document.getElementById('intro').classList.remove('hidden');
   currentScenario = null;
-  displayLimit = 15;
-  if (showingFavorites) renderFavorites();
-  else if (showingReflections) renderReflections();
-  else renderScenarioList(currentFilter);
+  roleSwapped = false;
+  displayLimit = 12;
+  refreshCurrentList();
 });
 
 document.getElementById('fav-btn').addEventListener('click', () => {
   if (currentScenario) toggleFavorite(currentScenario.id);
+});
+
+document.getElementById('swap-role-btn').addEventListener('click', () => {
+  if (!currentScenario) return;
+  roleSwapped = !roleSwapped;
+  renderScripts();
+  document.getElementById('swap-role-btn').textContent = roleSwapped ? '🔄 원래 역할로' : '🔄 역할 바꾸기';
 });
 
 document.getElementById('save-reflection').addEventListener('click', () => {
@@ -287,7 +338,7 @@ document.getElementById('save-reflection').addEventListener('click', () => {
     enc.textContent = encourageMessages[Math.floor(Math.random() * encourageMessages.length)];
     enc.classList.remove('hidden');
     renderDashboard();
-    setTimeout(() => msg.classList.add('hidden'), 2000);
+    setTimeout(() => msg.classList.add('hidden'), 2500);
   }
 });
 
@@ -311,13 +362,13 @@ document.getElementById('random-btn').addEventListener('click', () => {
 
 document.getElementById('favorites-btn').addEventListener('click', () => {
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  displayLimit = 15;
+  displayLimit = 12;
   renderFavorites();
 });
 
 document.getElementById('reflections-btn').addEventListener('click', () => {
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  displayLimit = 15;
+  displayLimit = 12;
   renderReflections();
 });
 
@@ -331,6 +382,31 @@ document.getElementById('close-modal').addEventListener('click', () => {
 
 document.getElementById('teacher-mode').addEventListener('change', () => {
   updateModeUI();
+});
+
+document.getElementById('search-input').addEventListener('input', (e) => {
+  searchQuery = e.target.value.trim();
+  displayLimit = 12;
+  refreshCurrentList();
+});
+
+document.getElementById('font-size-btn').addEventListener('click', () => {
+  const body = document.body;
+  if (body.classList.contains('xlarge-font')) {
+    body.classList.remove('xlarge-font');
+  } else if (body.classList.contains('large-font')) {
+    body.classList.remove('large-font');
+    body.classList.add('xlarge-font');
+  } else {
+    body.classList.add('large-font');
+  }
+});
+
+document.querySelectorAll('.step').forEach(step => {
+  step.addEventListener('click', () => {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    step.classList.add('active');
+  });
 });
 
 // Init
