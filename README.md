@@ -4,6 +4,6 @@
 
 ## 현재 상태
 - 귀여운 UI + 애니메이션 완료
-- 시나리오 배치 업로드 진행 중 (다양한 상황 추가됨)
+- 시나리오 배치 업로드 진행 중 (다양한 카테고리 추가됨)
 
-접속: https://gmlduqzhd123-lab.github.io/Heart-Connecting/
+접속 주소: https://gmlduqzhd123-lab.github.io/Heart-Connecting/
