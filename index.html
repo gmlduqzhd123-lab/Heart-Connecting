@@ -13,6 +13,7 @@
     <div class="header-controls">
       <div class="mode-toggle">
         <label><input type="checkbox" id="teacher-mode"> 교사용 모드</label>
+        <label><input type="checkbox" id="memory-mode"> 메모리 모드</label>
       </div>
       <button id="font-size-btn" class="small-btn">글자 크기</button>
     </div>
@@ -29,6 +30,11 @@
       <div id="today-recommend" class="card highlight">
         <h3>오늘의 추천 상황</h3>
         <div id="today-card"></div>
+      </div>
+
+      <div id="lesson-preset-card" class="card" style="display:none;">
+        <h3>📚 수업 프리셋</h3>
+        <div id="lesson-presets"></div>
       </div>
 
       <div class="action-buttons">
