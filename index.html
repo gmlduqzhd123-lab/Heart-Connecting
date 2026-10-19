@@ -10,10 +10,29 @@
   <header>
     <h1>마음잇기 AI</h1>
     <p>초등 고학년을 위한 감정·갈등 해결 연습 도구</p>
+    <div class="mode-toggle">
+      <label><input type="checkbox" id="teacher-mode"> 교사용 모드</label>
+    </div>
   </header>
 
   <main>
     <section id="intro">
+      <div id="dashboard" class="card">
+        <h3>나의 연습 기록</h3>
+        <p id="stats">로딩 중...</p>
+      </div>
+
+      <div id="today-recommend" class="card highlight">
+        <h3>오늘의 추천 상황</h3>
+        <div id="today-card"></div>
+      </div>
+
+      <div class="action-buttons">
+        <button id="random-btn">🎲 아무 상황이나 도전하기</button>
+        <button id="favorites-btn">⭐ 내가 저장한 상황</button>
+        <button id="teacher-tips-btn">👩‍🏫 선생님을 위한 안내</button>
+      </div>
+
       <h2>상황 선택하기</h2>
       <p>아래 상황을 골라보거나, 비슷한 일을 떠올려 보세요.</p>
       <div id="category-filter">
@@ -25,16 +44,28 @@
         <button class="filter-btn" data-category="급식시간">🍽️ 급식시간</button>
         <button class="filter-btn" data-category="쉬는 시간">⏰ 쉬는 시간</button>
       </div>
+      <div id="progress-info"></div>
       <div id="scenario-list"></div>
     </section>
 
     <section id="practice" class="hidden">
       <button id="back-btn">← 다른 상황 보기</button>
+      <button id="fav-btn" class="fav-btn">☆ 즐겨찾기</button>
       <h2 id="scenario-title"></h2>
       <p id="scenario-situation" class="situation"></p>
 
+      <div class="card" id="teacher-tip-card" style="display:none;">
+        <h3>교사용 팁</h3>
+        <p id="teacher-tip-text"></p>
+      </div>
+
       <div class="card">
         <h3>역할극 연습</h3>
+        <div class="steps">
+          <span class="step active">1. 내 마음 말하기</span>
+          <span class="step">2. 친구 입장 생각해보기</span>
+          <span class="step">3. 좋은 말 찾기</span>
+        </div>
         <div id="scripts"></div>
       </div>
 
@@ -51,11 +82,29 @@
       <div class="card">
         <h3>나의 성찰</h3>
         <textarea id="reflection" placeholder="오늘 연습하면서 느낀 점이나 배운 점을 적어보세요. (이 내용은 이 기기에만 저장됩니다)"></textarea>
-        <button id="save-reflection">성찰 저장하기</button>
+        <div class="btn-group">
+          <button id="save-reflection">성찰 저장하기</button>
+          <button id="copy-reflection">복사하기</button>
+          <button id="print-reflection">인쇄하기</button>
+        </div>
         <p id="save-message" class="success hidden">저장되었습니다!</p>
+        <p id="encourage" class="encourage hidden"></p>
       </div>
     </section>
   </main>
+
+  <div id="teacher-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3>선생님을 위한 활용 안내</h3>
+      <ul>
+        <li>모둠 활동 전에 2분 정도 관련 상황을 함께 연습해 보세요.</li>
+        <li>갈등 상황이 생긴 뒤 성찰 시간을 가지면 효과가 좋습니다.</li>
+        <li>학생이 즐겨찾기를 해 둔 상황을 바탕으로 대화해 보세요.</li>
+        <li>교사용 모드를 켜면 각 상황에 간단한 활용 팁이 표시됩니다.</li>
+      </ul>
+      <button id="close-modal">닫기</button>
+    </div>
+  </div>
 
   <footer>
     <p>개인정보를 수집하지 않습니다. 모든 기록은 이 기기에만 남습니다.</p>
