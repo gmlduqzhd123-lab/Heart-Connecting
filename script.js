@@ -6,6 +6,8 @@ let showingReflections = false;
 let displayLimit = 12;
 let roleSwapped = false;
 let searchQuery = '';
+let currentStep = 1;
+let stepInputs = {1: '', 2: '', 3: ''};
 
 const encourageMessages = [
   "잘했어! 친구 마음을 생각해보는 게 정말 어려웠을 텐데 용감했어.",
@@ -18,11 +20,29 @@ const encourageMessages = [
 
 const teacherTips = {
   "친구 관계": "쉬는 시간이나 점심시간에 간단히 함께 연습해 보세요. 학생이 직접 역할을 바꿔 해보게 하면 공감 효과가 커집니다.",
-  "모둠 활동": "모둠 활동 시작 전에 2분 정도 관련 상황을 다루어보면 갈등을 예방할 수 있습니다.",
+  "모둠 활동": "모둠 활동 시작 전에 2분 정도 관련 상황을 다뤄보면 갈등을 예방할 수 있습니다.",
   "수업 중": "수업 중 생긴 갈등을 바로 다루기보다 쉬는 시간에 성찰로 연결해 보세요.",
   "놀이터": "체육 시간이나 쉬는 시간 후 간단한 대화 자료로 활용하기 좋습니다.",
   "급식시간": "급식 후 짧은 성찰 활동으로 연결하면 효과가 있습니다.",
   "쉬는 시간": "갈등 상황 직후 바로 연습하기 좋은 주제입니다."
+};
+
+const stepPrompts = {
+  1: {
+    title: '1. 내 마음 말하기',
+    guide: '이 상황에서 내가 느낀 감정을 말해보세요. "나는 ~해서 속상했어/화가 났어/서운했어."',
+    placeholder: '예: 나는 이야기를 다 끝내지 못해서 서운했어.'
+  },
+  2: {
+    title: '2. 친구 입장 생각해보기',
+    guide: '친구는 어떤 마음이었을까요? 추측이 아니라 "혹시 ~했니?"라고 물어볼 수도 있어요.',
+    placeholder: '예: 혹시 급해서 그랬니? 또는 친구는 그냥 재미로 말했을 수도 있어.'
+  },
+  3: {
+    title: '3. 좋은 말 찾기',
+    guide: '내가 바라는 점이나 요청을 구체적으로 말해보세요. "다음에는 ~해줬으면 좋겠어."',
+    placeholder: '예: 다음에는 이야기를 끝까지 들어줬으면 좋겠어.'
+  }
 };
 
 async function loadScenarios() {
@@ -91,8 +111,10 @@ function renderDashboard() {
 
 function renderTodayRecommend() {
   if (scenarios.length === 0) return;
+  const recommended = scenarios.filter(s => s.teaching?.recommended);
+  const pool = recommended.length > 0 ? recommended : scenarios;
   const day = new Date().getDate();
-  const scenario = scenarios[day % scenarios.length];
+  const scenario = pool[day % pool.length];
   document.getElementById('today-card').innerHTML = `
     <div class="scenario-item" data-id="${scenario.id}" style="margin:0;">
       <div class="top-row">
@@ -122,7 +144,7 @@ function renderListItems(items, container) {
     <div class="scenario-item" data-id="${s.id}">
       <div class="top-row">
         <span class="cat-badge">${s.category}</span>
-        <span class="item-title">${s.title}</span>
+        <span class="item-title">${s.title}${s.teaching?.recommended ? ' ⭐' : ''}</span>
       </div>
       <div class="item-preview">${(s.situation || '').substring(0, 70)}${(s.situation || '').length > 70 ? '...' : ''}</div>
     </div>
@@ -201,6 +223,38 @@ function renderReflections() {
   renderListItems(filtered, container);
 }
 
+function saveCurrentStepInput() {
+  const input = document.getElementById('step-input');
+  if (input) stepInputs[currentStep] = input.value;
+}
+
+function showStepContent(step) {
+  currentStep = step;
+  const container = document.getElementById('step-content');
+  if (!container) return;
+  const p = stepPrompts[step];
+  container.innerHTML = `
+    <h4>${p.title}</h4>
+    <p class="step-guide">${p.guide}</p>
+    <textarea id="step-input" placeholder="${p.placeholder}" rows="3">${stepInputs[step] || ''}</textarea>
+  `;
+  document.querySelectorAll('.step').forEach(s => {
+    s.classList.toggle('active', parseInt(s.dataset.step) === step);
+  });
+}
+
+function initPracticeSteps() {
+  stepInputs = {1: '', 2: '', 3: ''};
+  currentStep = 1;
+  showStepContent(1);
+  document.querySelectorAll('.step').forEach(step => {
+    step.onclick = () => {
+      saveCurrentStepInput();
+      showStepContent(parseInt(step.dataset.step));
+    };
+  });
+}
+
 function showScenario(id) {
   currentScenario = scenarios.find(s => s.id === id);
   if (!currentScenario) return;
@@ -214,6 +268,7 @@ function showScenario(id) {
   document.getElementById('scenario-title').textContent = currentScenario.title;
   document.getElementById('scenario-situation').textContent = currentScenario.situation;
   renderScripts();
+  initPracticeSteps();
 
   document.getElementById('empathy-list').innerHTML =
     (currentScenario.empathy_examples || []).map(ex => `<li>${ex}</li>`).join('');
@@ -227,6 +282,7 @@ function showScenario(id) {
 
   updateFavButton();
   updateTeacherTip();
+  document.getElementById('swap-role-btn').textContent = '🔄 역할 바꾸기';
 }
 
 function renderScripts() {
@@ -275,6 +331,7 @@ function setupFilters() {
 }
 
 document.getElementById('back-btn')?.addEventListener('click', () => {
+  saveCurrentStepInput();
   document.getElementById('practice').classList.add('hidden');
   document.getElementById('intro').classList.remove('hidden');
   currentScenario = null;
