@@ -366,3 +366,14 @@ footer p:first-child::before { content: "🔒 "; }
   .header-controls { position: static; justify-content: center; margin-top: 0.8rem; }
   .scenario-item { padding: 0.7rem; }
 }
+
+.step-content {
+  background: #fffefc;
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border);
+}
+.step-content h4 { margin: 0 0 0.5rem; color: var(--primary-dark); }
+.step-guide { font-size: 0.9rem; color: var(--muted); margin-bottom: 0.6rem; }
+.step-content textarea { min-height: 80px; }
