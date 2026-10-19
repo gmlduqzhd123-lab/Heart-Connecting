@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>마음잇기 AI - 갈등 해결 연습</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>마음잇기 AI</h1>
+    <p>초등 고학년을 위한 감정·갈등 해결 연습 도구</p>
+  </header>
+
+  <main>
+    <section id="intro">
+      <h2>상황 선택하기</h2>
+      <p>아래 상황을 골라보거나, 비슷한 일을 떠올려 보세요.</p>
+      <div id="category-filter">
+        <button class="filter-btn active" data-category="all">🌈 전체</button>
+        <button class="filter-btn" data-category="친구 관계">👫 친구 관계</button>
+        <button class="filter-btn" data-category="모둠 활동">👥 모둠 활동</button>
+        <button class="filter-btn" data-category="수업 중">📚 수업 중</button>
+        <button class="filter-btn" data-category="놀이터">🛝 놀이터</button>
+        <button class="filter-btn" data-category="급식시간">🍽️ 급식시간</button>
+        <button class="filter-btn" data-category="쉬는 시간">⏰ 쉬는 시간</button>
+      </div>
+      <div id="scenario-list"></div>
+    </section>
+
+    <section id="practice" class="hidden">
+      <button id="back-btn">← 다른 상황 보기</button>
+      <h2 id="scenario-title"></h2>
+      <p id="scenario-situation" class="situation"></p>
+
+      <div class="card">
+        <h3>역할극 연습</h3>
+        <div id="scripts"></div>
+      </div>
+
+      <div class="card">
+        <h3>공감 표현 예시</h3>
+        <ul id="empathy-list"></ul>
+      </div>
+
+      <div class="card">
+        <h3>생각해 볼 질문</h3>
+        <ul id="questions-list"></ul>
+      </div>
+
+      <div class="card">
+        <h3>나의 성찰</h3>
+        <textarea id="reflection" placeholder="오늘 연습하면서 느낀 점이나 배운 점을 적어보세요. (이 내용은 이 기기에만 저장됩니다)"></textarea>
+        <button id="save-reflection">성찰 저장하기</button>
+        <p id="save-message" class="success hidden">저장되었습니다!</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>개인정보를 수집하지 않습니다. 모든 기록은 이 기기에만 남습니다.</p>
+    <p>마음잇기 AI · 초등 사회정서학습 지원 도구</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
