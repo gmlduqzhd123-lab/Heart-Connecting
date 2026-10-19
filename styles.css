@@ -356,3 +356,9 @@ button#save-reflection:active {
 #back-btn {
   transition: all 0.25s ease;
 }
+
+@media (max-width: 600px) {
+  header h1 { font-size: 1.7rem; }
+  main { padding: 1.2rem; }
+  .scenario-card { padding: 1.1rem; }
+}
