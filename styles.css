@@ -377,3 +377,15 @@ footer p:first-child::before { content: "🔒 "; }
 .step-content h4 { margin: 0 0 0.5rem; color: var(--primary-dark); }
 .step-guide { font-size: 0.9rem; color: var(--muted); margin-bottom: 0.6rem; }
 .step-content textarea { min-height: 80px; }
+
+.lesson-btn {
+  padding: 0.5rem 1rem;
+  margin: 0.3rem;
+  border: 2px solid var(--border);
+  background: white;
+  border-radius: 20px;
+  cursor: pointer;
+}
+.lesson-btn:hover { background: var(--primary); color: white; }
+.lesson-desc { font-size: 0.9rem; color: var(--muted); margin-top: 0.5rem; }
+.lesson-timer { font-weight: bold; color: var(--primary-dark); margin-top: 0.3rem; }
