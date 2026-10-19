@@ -116,8 +116,8 @@ h2::before {
 }
 
 .scenario-card:hover {
-  transform: translateY(-4px) scale(1.01);
-  box-shadow: 0 8px 25px rgba(255, 143, 171, 0.25);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(255, 143, 171, 0.2);
 }
 
 .scenario-card h3 {
@@ -261,100 +261,12 @@ footer p:first-child::before {
   content: "🔒 ";
 }
 
-/* ===== 애니메이션 추가 ===== */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
-}
-
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.08); }
-  100% { transform: scale(1); }
-}
-
-@keyframes heartBeat {
-  0%, 100% { transform: scale(1); }
-  15% { transform: scale(1.15); }
-  30% { transform: scale(1); }
-  45% { transform: scale(1.1); }
-}
-
-header h1 {
-  animation: heartBeat 2.5s ease-in-out infinite;
-}
-
-.scenario-card {
-  animation: fadeInUp 0.5s ease-out forwards;
-  opacity: 0;
-}
-
-.scenario-card:nth-child(1) { animation-delay: 0.05s; }
-.scenario-card:nth-child(2) { animation-delay: 0.1s; }
-.scenario-card:nth-child(3) { animation-delay: 0.15s; }
-.scenario-card:nth-child(4) { animation-delay: 0.2s; }
-.scenario-card:nth-child(5) { animation-delay: 0.25s; }
-.scenario-card:nth-child(n+6) { animation-delay: 0.3s; }
-
-#practice {
-  animation: fadeInUp 0.4s ease-out;
-}
-
-.card {
-  animation: fadeInUp 0.45s ease-out;
-}
-
-.filter-btn {
-  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.filter-btn:active {
-  transform: scale(0.95);
-}
-
-button#save-reflection:active {
-  animation: pulse 0.3s ease;
-}
-
-.script-block {
-  animation: fadeInUp 0.4s ease-out;
-}
-
-#empathy-list li,
-#questions-list li {
-  animation: fadeInUp 0.4s ease-out;
-  opacity: 0;
-  animation-fill-mode: forwards;
-}
-
-#empathy-list li:nth-child(1),
-#questions-list li:nth-child(1) { animation-delay: 0.1s; }
-#empathy-list li:nth-child(2),
-#questions-list li:nth-child(2) { animation-delay: 0.2s; }
-#empathy-list li:nth-child(3),
-#questions-list li:nth-child(3) { animation-delay: 0.3s; }
-
-.success {
-  animation: bounce 0.6s ease;
-}
-
-/* 부드러운 전환 */
+/* 애니메이션 제거 (계속 움직임 방지) */
 .scenario-card,
 .card,
 .filter-btn,
 #back-btn {
-  transition: all 0.25s ease;
+  transition: all 0.2s ease;
 }
 
 @media (max-width: 600px) {
