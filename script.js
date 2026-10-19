@@ -3,6 +3,7 @@ let currentScenario = null;
 let currentFilter = 'all';
 let showingFavorites = false;
 let showingReflections = false;
+let displayLimit = 15;
 
 const encourageMessages = [
   "잘했어! 친구 마음을 생각해보는 게 정말 어려웠을 텐데 용감했어.",
@@ -81,20 +82,44 @@ function renderTodayRecommend() {
   const day = new Date().getDate();
   const scenario = scenarios[day % scenarios.length];
   document.getElementById('today-card').innerHTML = `
-    <div class="scenario-card" data-id="${scenario.id}" style="margin:0;">
+    <div class="scenario-card compact" data-id="${scenario.id}" style="margin:0;">
       <span class="category">${scenario.category}</span>
       <h3>${scenario.title}</h3>
-      <p>${scenario.situation}</p>
     </div>
   `;
   const card = document.querySelector('#today-card .scenario-card');
   if (card) card.addEventListener('click', () => showScenario(scenario.id));
 }
 
+function renderListItems(items, container) {
+  const limited = items.slice(0, displayLimit);
+  container.innerHTML = limited.map(s => `
+    <div class="scenario-item" data-id="${s.id}">
+      <span class="cat-badge">${s.category}</span>
+      <span class="item-title">${s.title}</span>
+    </div>
+  `).join('');
+
+  if (items.length > displayLimit) {
+    container.innerHTML += `<button id="load-more" class="load-more-btn">더 보기 (${items.length - displayLimit}개 더)</button>`;
+    document.getElementById('load-more').addEventListener('click', () => {
+      displayLimit += 15;
+      if (showingFavorites) renderFavorites();
+      else if (showingReflections) renderReflections();
+      else renderScenarioList(currentFilter);
+    });
+  }
+
+  document.querySelectorAll('.scenario-item').forEach(item => {
+    item.addEventListener('click', () => showScenario(item.dataset.id));
+  });
+}
+
 function renderScenarioList(category) {
   currentFilter = category;
   showingFavorites = false;
   showingReflections = false;
+  displayLimit = 15;
   const container = document.getElementById('scenario-list');
   let filtered = category === 'all' ? scenarios : scenarios.filter(s => s.category === category);
 
@@ -103,18 +128,7 @@ function renderScenarioList(category) {
     return;
   }
 
-  container.innerHTML = filtered.map(s => `
-    <div class="scenario-card" data-id="${s.id}">
-      <span class="category">${s.category}</span>
-      <h3>${s.title}</h3>
-      <p>${s.situation}</p>
-    </div>
-  `).join('');
-
-  document.querySelectorAll('#scenario-list .scenario-card').forEach(card => {
-    card.addEventListener('click', () => showScenario(card.dataset.id));
-  });
-
+  renderListItems(filtered, container);
   updateProgress(category);
   document.getElementById('list-title').textContent = '상황 선택하기';
 }
@@ -122,6 +136,7 @@ function renderScenarioList(category) {
 function renderFavorites() {
   showingFavorites = true;
   showingReflections = false;
+  displayLimit = 15;
   const favs = getFavorites();
   const filtered = scenarios.filter(s => favs.includes(s.id));
   const container = document.getElementById('scenario-list');
@@ -133,22 +148,13 @@ function renderFavorites() {
     return;
   }
 
-  container.innerHTML = filtered.map(s => `
-    <div class="scenario-card" data-id="${s.id}">
-      <span class="category">${s.category}</span>
-      <h3>${s.title}</h3>
-      <p>${s.situation}</p>
-    </div>
-  `).join('');
-
-  document.querySelectorAll('#scenario-list .scenario-card').forEach(card => {
-    card.addEventListener('click', () => showScenario(card.dataset.id));
-  });
+  renderListItems(filtered, container);
 }
 
 function renderReflections() {
   showingFavorites = false;
   showingReflections = true;
+  displayLimit = 15;
   const container = document.getElementById('scenario-list');
   document.getElementById('list-title').textContent = '내가 작성한 성찰';
 
@@ -160,7 +166,7 @@ function renderReflections() {
       const text = localStorage.getItem(key);
       const scenario = scenarios.find(s => s.id === id);
       if (scenario && text) {
-        items.push({ scenario, text });
+        items.push(scenario);
       }
     }
   }
@@ -170,17 +176,7 @@ function renderReflections() {
     return;
   }
 
-  container.innerHTML = items.map(item => `
-    <div class="scenario-card" data-id="${item.scenario.id}">
-      <span class="category">${item.scenario.category}</span>
-      <h3>${item.scenario.title}</h3>
-      <p style="color:#555; font-size:0.9rem; margin-top:0.5rem;">${item.text.substring(0, 80)}${item.text.length > 80 ? '...' : ''}</p>
-    </div>
-  `).join('');
-
-  document.querySelectorAll('#scenario-list .scenario-card').forEach(card => {
-    card.addEventListener('click', () => showScenario(card.dataset.id));
-  });
+  renderListItems(items, container);
 }
 
 function updateProgress(category) {
@@ -260,6 +256,7 @@ function setupFilters() {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
+      displayLimit = 15;
       renderScenarioList(btn.dataset.category);
     });
   });
@@ -269,6 +266,7 @@ document.getElementById('back-btn').addEventListener('click', () => {
   document.getElementById('practice').classList.add('hidden');
   document.getElementById('intro').classList.remove('hidden');
   currentScenario = null;
+  displayLimit = 15;
   if (showingFavorites) renderFavorites();
   else if (showingReflections) renderReflections();
   else renderScenarioList(currentFilter);
@@ -313,11 +311,13 @@ document.getElementById('random-btn').addEventListener('click', () => {
 
 document.getElementById('favorites-btn').addEventListener('click', () => {
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  displayLimit = 15;
   renderFavorites();
 });
 
 document.getElementById('reflections-btn').addEventListener('click', () => {
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  displayLimit = 15;
   renderReflections();
 });
 
