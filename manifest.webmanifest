@@ -1,0 +1,17 @@
+{
+  "id": "/Heart-Connecting/",
+  "name": "마음잇기 AI - 갈등 해결 연습",
+  "short_name": "마음잇기",
+  "description": "초등 고학년을 위한 감정·갈등 해결 연습 도구",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fff5f7",
+  "theme_color": "#ff8fab",
+  "lang": "ko",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
