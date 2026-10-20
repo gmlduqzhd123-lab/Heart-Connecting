@@ -389,3 +389,17 @@ footer p:first-child::before { content: "🔒 "; }
 .lesson-btn:hover { background: var(--primary); color: white; }
 .lesson-desc { font-size: 0.9rem; color: var(--muted); margin-top: 0.5rem; }
 .lesson-timer { font-weight: bold; color: var(--primary-dark); margin-top: 0.3rem; }
+
+/* 📲 앱 설치 · 📱 QR (엽쌤 앱 공통 상단 버튼) */
+.ys-key { display: flex; gap: 0.4rem; }
+.ys-chip { display: inline-block; font: inherit; font-size: 0.9rem; font-weight: 700; background: white; color: var(--primary-dark); padding: 0.4rem 0.8rem; border-radius: 20px; border: none; cursor: pointer; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+.ys-chip:hover { background: #fff0f4; }
+.ys-credit { font-size: 0.85rem; }
+.ys-credit a { color: var(--primary-dark); text-underline-offset: 3px; }
+@media (max-width: 600px) {
+  header { padding-top: 3.6rem; }
+  .header-controls { flex-wrap: wrap; }
+  .header-controls .ys-key { position: absolute; top: 0.8rem; right: 0.8rem; }
+  .ys-chip { font-size: 0.82rem; padding: 0.35rem 0.7rem; }
+  .ys-wide { display: none; }
+}
